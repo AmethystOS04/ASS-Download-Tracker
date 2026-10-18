@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Amethyst's Stupid Stuff Tracker</title>
+<style>
+  :root{
+    color-scheme:dark;
+    --bg:#0d0d12;
+    --panel:#17171f;
+    --panel2:#20202a;
+    --text:#e2a8ff;
+    --muted:#be84da;
+    --purple:#a86cff;
+    --purple2:#7d3cff;
+    --green:#5ee28a;
+    --red:#ff6b7a;
+    --border:#30303d;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    min-height:100vh;
+    font-family:system-ui,-apple-system,Segoe UI,sans-serif;
+    background:
+      radial-gradient(circle at 20% 0%,#24153d 0,transparent 35%),
+      radial-gradient(circle at 100% 100%,#171f3a 0,transparent 35%),
+      var(--bg);
+    color:var(--text);
+  }
+  .wrap{max-width:1100px;margin:auto;padding:28px 18px 50px}
+  header{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap}
+  h1{margin:0;font-size:clamp(25px,5vw,42px)}
+  h1 span{color:var(--purple)}
+  .sub{color:var(--muted);margin-top:5px}
+  button{
+    border:1px solid var(--border);background:var(--panel2);color:var(--text);
+    border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer
+  }
+  button:hover{border-color:var(--purple);transform:translateY(-1px)}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:24px}
+  .card{
+    background:linear-gradient(145deg,#191921,#121219);
+    border:1px solid var(--border);border-radius:18px;padding:20px;
+    box-shadow:0 10px 30px #0005
+  }
+  .label{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+  .big{font-size:42px;font-weight:900;margin:3px 0}
+  .download .big{color:var(--purple)}
+  .green{color:var(--green)}
+  .muted{color:var(--muted)}
+  .milestone{
+    margin-top:14px;padding:15px 18px;border-radius:15px;
+    background:#241738;border:1px solid #69419b;color:#e8d9ff;font-weight:800
+  }
+  .bar{height:9px;background:#292936;border-radius:99px;overflow:hidden;margin-top:12px}
+  .bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--purple2),var(--purple));border-radius:99px;transition:width .5s}
+  section{margin-top:22px}
+  .section-title{display:flex;justify-content:space-between;align-items:end;gap:10px;margin-bottom:10px}
+  .section-title h2{margin:0;font-size:20px}
+  .table-wrap{overflow:auto;border:1px solid var(--border);border-radius:16px}
+  table{width:100%;border-collapse:collapse;background:#131319}
+  th,td{text-align:left;padding:12px 14px;border-bottom:1px solid #292934}
+  th{color:var(--muted);font-size:13px}
+  td:last-child,th:last-child{text-align:right}
+  tr:last-child td{border-bottom:0}
+  .pill{display:inline-block;padding:3px 8px;border-radius:99px;font-size:12px;background:#29223a;color:#d8c2ff}
+  .release{background:#172b33;color:#8fe9f0}
+  .beta{background:#2b193a;color:#f18bff}
+  .chart{height:180px;display:flex;align-items:end;gap:4px;padding:18px 10px 10px}
+  .barcol{flex:1;min-width:3px;background:linear-gradient(to top,var(--purple2),var(--purple));border-radius:5px 5px 1px 1px;opacity:.8;position:relative}
+  .barcol:hover{opacity:1}
+  .barcol span{display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);font-size:11px;background:#0b0b0f;padding:4px 6px;border-radius:6px;white-space:nowrap}
+  .barcol:hover span{display:block}
+  .notice{padding:14px 16px;border-radius:14px;background:#1b0938;border:1px solid var(--border);color:var(--muted);line-height:1.45}
+  .project-links{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  .project-link{display:flex;align-items:center;justify-content:center;gap:9px;padding:13px 16px;border:1px solid var(--border);border-radius:14px;background:linear-gradient(145deg,#191921,#121219);color:var(--text);text-decoration:none;font-weight:800;transition:transform .15s,border-color .15s,background .15s}
+  .project-link:hover{transform:translateY(-2px);border-color:var(--purple);background:#21152f}
+  .project-link .icon{font-size:18px}
+  @media(max-width:750px){.project-links{grid-template-columns:1fr}}
+  .status{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;margin-top:12px}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green)}
+  .dot.err{background:var(--red);box-shadow:0 0 10px var(--red)}
+  footer{margin-top:30px;color:#777386;font-size:12px;text-align:center}
+  @media(max-width:750px){.grid{grid-template-columns:1fr}.big{font-size:36px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1><span>amethyst's</span> stupid stuff tracker</h1>
+      <div class="sub">live-ish modrinth stats without opening modrinth every 5 fucking minutes</div>
+    </div>
+    <button id="refresh">↻ refresh now</button>
+  </header>
+
+  <div class="grid">
+    <div class="card download">
+      <div class="label">total downloads</div>
+      <div class="big" id="downloads">...</div>
+      <div id="downloadChange" class="muted">loading</div>
+      <div class="bar"><i id="progress"></i></div>
+      <div id="milestone" class="milestone">arent you blasé yet</div>
+    </div>
+
+    <div class="card">
+      <div class="label">followers</div>
+      <div class="big green" id="followers">...</div>
+      <div class="muted">modrinth followers</div>
+    </div>
+
+    <div class="card">
+      <div class="label">modrinth views</div>
+      <div class="big" id="views">n/a</div>
+      <div class="muted">YOU CAN TRY SCREAMING FUTILELY, I'D DEEM IT FOOLHARDLY! ILL BE HERE DRIVING YOU DOOLALLY!</div>
+    </div>
+  </div>
+
+  <section class="card">
+    <div class="section-title">
+      <h2>download history</h2>
+      <span class="muted" id="historyCount">0 snapshots</span>
+    </div>
+    <div id="chart" class="chart"></div>
+    <div class="muted">version upload times come directly from modrinth's exact <code>date_published</code> timestamp, not its shortened "2w ago" display</div>
+  </section>
+
+  <section>
+    <div class="section-title">
+      <h2>version downloads</h2>
+      <span class="muted" id="versionCount">loading...</span>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>version</th><th>channel</th><th>uploaded</th><th>downloads</th></tr></thead>
+        <tbody id="versions"><tr><td colspan="4">loading...</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <div class="status"><span class="dot" id="dot"></span><span id="status">loading modrinth data...</span></div>
+
+  <section class="notice">
+    <b>about views:</b> modrinth's public project endpoint exposes total downloads and followers, and the public version endpoint exposes per-version downloads, but the public API does not expose the project's page-view analytics, this tracker therefore does not fake a views number, downloads and version stats are pulled directly from modrinth's public api
+  </section>
+
+  <section>
+    <div class="section-title">
+      <h2>project links</h2>
+      <span class="muted">the places where the stupid stuff lives</span>
+    </div>
+    <div class="project-links">
+      <a class="project-link" href="https://modrinth.com/mod/amethyststupidstuff" target="_blank" rel="noopener noreferrer"><span class="icon">◈</span> Modrinth</a>
+      <a class="project-link" href="https://github.com/AmethystOS04/Amethyststupidstuff" target="_blank" rel="noopener noreferrer"><span class="icon">⌘</span> GitHub</a>
+      <a class="project-link" href="https://www.curseforge.com/minecraft/mc-mods/amethysts-stupid-stuff" target="_blank" rel="noopener noreferrer"><span class="icon">◆</span> CurseForge</a>
+    </div>
+  </section>
+
+  <footer>amethyst's stupid stuff • project: amethyststupidstuff • auto-refresh every 60 seconds • by this stage im basically blasé</footer>
+</div>
+
+<script>
+const API = "https://api.modrinth.com/v2";
+const PROJECT = "amethyststupidstuff";
+const KEY = "ass_tracker_history_v1";
+const REFRESH_MS = 60000;
+
+const $ = id => document.getElementById(id);
+const fmt = n => Number(n).toLocaleString();
+
+function loadHistory(){
+  try { return JSON.parse(localStorage.getItem(KEY) || "[]"); }
+  catch { return []; }
+}
+function saveHistory(arr){
+  localStorage.setItem(KEY, JSON.stringify(arr.slice(-60)));
+}
+function record(downloads){
+  const h = loadHistory();
+  const now = new Date().toISOString();
+  const last = h[h.length-1];
+  if (!last || last.downloads !== downloads) h.push({time:now,downloads});
+  else last.time = now;
+  saveHistory(h);
+  return h;
+}
+function renderChart(h){
+  $("historyCount").textContent = `${h.length} snapshot${h.length===1?"":"s"}`;
+  const c = $("chart");
+  c.innerHTML = "";
+  if (!h.length){
+    c.innerHTML = '<div class="muted">no history yet</div>';
+    return;
+  }
+  const max = Math.max(...h.map(x=>x.downloads), 1);
+  const min = Math.min(...h.map(x=>x.downloads));
+  const range = Math.max(max-min, 1);
+  h.forEach(x=>{
+    const b = document.createElement("div");
+    b.className="barcol";
+    b.style.height = `${Math.max(7, ((x.downloads-min)/range)*100)}%`;
+    const s=document.createElement("span");
+    s.textContent=`${fmt(x.downloads)} • ${new Date(x.time).toLocaleString()}`;
+    b.appendChild(s);
+    c.appendChild(b);
+  });
+}
+
+async function fetchData(){
+  $("status").textContent="fetching fresh modrinth data...";
+  $("dot").classList.remove("err");
+  try{
+    const [projectRes, versionsRes] = await Promise.all([
+      fetch(`${API}/project/${PROJECT}`, {cache:"no-store"}),
+      fetch(`${API}/project/${PROJECT}/version?include_changelog=false`, {cache:"no-store"})
+    ]);
+    if(!projectRes.ok || !versionsRes.ok) throw new Error("modrinth api request failed");
+    const project = await projectRes.json();
+    const versions = await versionsRes.json();
+
+    const downloads = project.downloads ?? 0;
+    $("downloads").textContent=fmt(downloads);
+    $("followers").textContent=fmt(project.followers ?? 0);
+
+    const history = record(downloads);
+    renderChart(history);
+
+    const previous = history.length > 1 ? history[history.length-2].downloads : downloads;
+    const delta = downloads - previous;
+    $("downloadChange").textContent = history.length > 1
+      ? `${delta >= 0 ? "+" : ""}${fmt(delta)} since last change`
+      : "first snapshot";
+
+    const target = 200;
+    const pct = Math.min(100, downloads/target*100);
+    $("progress").style.width = pct + "%";
+    if(downloads >= target){
+      $("milestone").textContent = `🎉 ${fmt(downloads)} DOWNLOADS • 200 DESTROYED`;
+    }else{
+      $("milestone").textContent = `🔥 ${fmt(target-downloads)} more until 200`;
+    }
+
+    $("versions").innerHTML = versions.map(v=>{
+      const channel = v.version_type || "unknown";
+      const cls = channel==="release" ? "release" : channel==="beta" ? "beta" : "";
+      return `<tr>
+        <td><b>${escapeHtml(v.version_number)}</b></td>
+        <td><span class="pill ${cls}">${escapeHtml(channel)}</span></td>
+        <td class="muted" title="${escapeHtml(new Date(v.date_published).toISOString())}">
+          ${new Date(v.date_published).toLocaleString([], {
+            year:"numeric", month:"short", day:"numeric",
+            hour:"numeric", minute:"2-digit"
+          })}
+        </td>
+        <td><b>${fmt(v.downloads)}</b></td>
+      </tr>`;
+    }).join("");
+    $("versionCount").textContent = `${versions.length} versions`;
+    $("status").textContent = `last updated ${new Date().toLocaleTimeString()}`;
+  }catch(e){
+    $("status").textContent = `couldn't reach modrinth: ${e.message}`;
+    $("dot").classList.add("err");
+  }
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+$("refresh").addEventListener("click", fetchData);
+fetchData();
+setInterval(fetchData, REFRESH_MS);
+</script>
+</body>
+</html>
